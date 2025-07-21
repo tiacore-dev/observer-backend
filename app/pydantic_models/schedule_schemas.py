@@ -148,6 +148,7 @@ class ScheduleSchema(BaseModel):
 
 class ScheduleShortSchema(BaseModel):
     id: UUID = Field(..., alias="schedule_id")
+    schedule_strategy: ScheduleStrategy
     prompt_id: Optional[UUID] = Field(None)
     schedule_type: ScheduleType
     enabled: bool
