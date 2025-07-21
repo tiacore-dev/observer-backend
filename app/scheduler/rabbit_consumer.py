@@ -39,13 +39,11 @@ async def consume_schedule_events(settings):
                                 from app.database.models import ChatSchedule
 
                                 logger.info(f"➕ Добавление задачи {schedule_id}")
-                                schedule = await ChatSchedule.get(
-                                    id=schedule_id
-                                ).prefetch_related("chat", "prompt", "bot")
-                                add_schedule_job(schedule, settings)
-                                logger.success(
-                                    f"✅ Задача {schedule_id} добавлена в планировщик."
+                                schedule = await ChatSchedule.get(id=schedule_id).prefetch_related(
+                                    "chat", "prompt", "bot"
                                 )
+                                add_schedule_job(schedule, settings)
+                                logger.success(f"✅ Задача {schedule_id} добавлена в планировщик.")
 
                             elif action == "delete":
                                 logger.info(f"➖ Удаление задачи {schedule_id}")
@@ -68,9 +66,7 @@ async def consume_schedule_events(settings):
                                 )
 
                         except Exception as e:
-                            logger.error(
-                                f"💥 Ошибка при обработке сообщения: {e}", exc_info=True
-                            )
+                            logger.error(f"💥 Ошибка при обработке сообщения: {e}", exc_info=True)
 
         except aio_pika.exceptions.AMQPConnectionError as e:
             logger.error(f"🐇 Не удалось подключиться к RabbitMQ: {e}")
