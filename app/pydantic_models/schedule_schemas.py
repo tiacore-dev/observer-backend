@@ -152,7 +152,7 @@ class ScheduleShortSchema(BaseModel):
     schedule_type: ScheduleType
     enabled: bool
     company_id: UUID
-    chat_id: int
+    chat_id: Optional[int] = Field(None)
     created_at: datetime
     bot_id: int
     last_run_at: Optional[datetime] = None
