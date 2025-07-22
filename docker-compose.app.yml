@@ -2,7 +2,7 @@
 services:
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq-${CONFIG_NAME}
+    container_name: rabbitmq-observer-${CONFIG_NAME}
     restart: always
     ports:
       - "${RABBIT_PORT}:5672"     
@@ -11,14 +11,19 @@ services:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - rabbitmq-observer-${CONFIG_NAME}
+
 
   redis:
     image: redis:7-alpine
     container_name: redis-observer-${CONFIG_NAME}
     restart: always
     networks:
-    - observer_network
+      observer_network:
+        aliases:
+          - rabbitmq-observer-${CONFIG_NAME}
 
   web:
     image: ${DOCKERHUB_USERNAME}/observer-backend:${TAG}
