@@ -200,23 +200,6 @@ async def get_schedule(schedule_id: UUID, context=Depends(require_permission_in_
     check_company_access(schedule.company_id, context)
     target_chat_ids = await TargetChat.filter(schedule=schedule).prefetch_related("chat").all()
     target_chats = [target_chat.chat.id for target_chat in target_chat_ids]
-    return ScheduleSchema(
-        schedule_strategy=schedule.schedule_strategy,
-        schedule_id=schedule.id,
-        prompt_id=schedule.prompt.id if schedule.prompt else None,
-        chat_id=schedule.chat.id if schedule.chat else None,
-        message_intro=schedule.message_intro,
-        schedule_type=schedule.schedule_type,
-        interval_hours=schedule.interval_hours,
-        interval_minutes=schedule.interval_minutes,
-        cron_expression=schedule.cron_expression,
-        enabled=schedule.enabled,
-        time_to_send=schedule.time_to_send,
-        send_after_minutes=schedule.send_after_minutes,
-        send_strategy=schedule.send_strategy,
-        company_id=schedule.company_id,
-        created_at=schedule.created_at,
-        last_run_at=schedule.last_run_at,
-        target_chats=list(target_chats),
-        bot_id=schedule.bot.id,
-    )
+    schedule_dict = schedule.__dict__
+    schedule_dict["target_chats"] = target_chats
+    return ScheduleSchema.model_validate(schedule_dict)
