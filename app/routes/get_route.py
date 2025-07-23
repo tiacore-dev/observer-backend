@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from tiacore_lib.handlers.dependency_handler import require_permission_in_context
 from tortoise.expressions import Q
 
 from app.database.models import Account, AccountCompanyRelation, Bot, Chat
 from app.pydantic_models.get_schemas import (
+    AccountEditSchema,
     AccountListSchema,
     AccountSchema,
     ChatListSchema,
@@ -15,9 +16,7 @@ from app.pydantic_models.get_schemas import (
 get_router = APIRouter()
 
 
-@get_router.get(
-    "/chats/all", response_model=ChatListSchema, summary="Получение списка чатов"
-)
+@get_router.get("/chats/all", response_model=ChatListSchema, summary="Получение списка чатов")
 async def get_chats(
     filters: dict = Depends(chat_filter_params),
     context=Depends(require_permission_in_context("get_all_chats")),
@@ -69,6 +68,19 @@ async def get_chats(
     )
 
 
+@get_router.patch("/accounts/{account_id}", summary="Изменение имени аккаунта", status_code=status.HTTP_204_NO_CONTENT)
+async def edit_accounts(
+    account_id: int,
+    data: AccountEditSchema = Body(...),
+    _=Depends(require_permission_in_context("edit_account")),
+):
+    account = await Account.filter(id=account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Аккаунт не найден")
+    account.name = data.name
+    await account.save()
+
+
 @get_router.get(
     "/accounts/all",
     response_model=AccountListSchema,
@@ -82,9 +94,9 @@ async def get_accounts(
     # 🔒 Фильтрация по company_id через релейшн
     if not context["is_superadmin"]:
         if context.get("company_id"):
-            account_ids = await AccountCompanyRelation.filter(
-                company_id=context["company_id"]
-            ).values_list("account_id", flat=True)
+            account_ids = await AccountCompanyRelation.filter(company_id=context["company_id"]).values_list(
+                "account_id", flat=True
+            )
 
             if not account_ids:
                 return AccountListSchema(total=0, accounts=[])

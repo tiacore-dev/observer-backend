@@ -36,16 +36,12 @@ async def add_prompt(
         raise HTTPException(status_code=500, detail="Не удалось создать промпту")
 
     logger.success(f"промпта {prompt.name} ({prompt.id}) успешно создана")
-    return {"prompt_id": str(prompt.id)}
+    return PromptResponseSchema(prompt_id=prompt.id)
 
 
-@prompt_router.patch(
-    "/{prompt_id}", summary="Изменение промпта", status_code=status.HTTP_204_NO_CONTENT
-)
+@prompt_router.patch("/{prompt_id}", summary="Изменение промпта", status_code=status.HTTP_204_NO_CONTENT)
 async def edit_prompt(
-    prompt_id: UUID = Path(
-        ..., title="ID промпта", description="ID изменяемой промпта"
-    ),
+    prompt_id: UUID = Path(..., title="ID промпта", description="ID изменяемой промпта"),
     data: PromptEditSchema = Body(...),
     context=Depends(require_permission_in_context("edit_prompt")),
 ):
@@ -60,9 +56,7 @@ async def edit_prompt(
     await prompt.save()
 
 
-@prompt_router.delete(
-    "/{prompt_id}", summary="Удаление промпта", status_code=status.HTTP_204_NO_CONTENT
-)
+@prompt_router.delete("/{prompt_id}", summary="Удаление промпта", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_prompt(
     prompt_id: UUID = Path(..., title="ID промпта", description="ID удаляемой промпта"),
     context=Depends(require_permission_in_context("delete_prompt")),
@@ -101,50 +95,34 @@ async def get_prompts(
     if filters.get("text"):
         query &= Q(text__icontains=filters["text"])
 
-    order_by = f"{'-' if filters.get('order') == 'desc' else ''}{
-        filters.get('sort_by', 'name')
-    }"
+    order_by = f"{'-' if filters.get('order') == 'desc' else ''}{filters.get('sort_by', 'name')}"
     page = filters.get("page", 1)
     page_size = filters.get("page_size", 10)
 
     total_count = await Prompt.filter(query).count()
 
-    prompts = (
-        await Prompt.filter(query)
-        .order_by(order_by)
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .values("id", "name", "text", "company_id", "created_at")
-    )
+    prompts = await Prompt.filter(query).order_by(order_by).offset((page - 1) * page_size).limit(page_size)
 
     return PromptListResponseSchema(
         total=total_count,
-        prompts=[PromptSchema(**prompt) for prompt in prompts],
+        prompts=[PromptSchema.model_validate(prompt) for prompt in prompts],
     )
 
 
-@prompt_router.get(
-    "/{prompt_id}", response_model=PromptSchema, summary="Просмотр промпта"
-)
+@prompt_router.get("/{prompt_id}", response_model=PromptSchema, summary="Просмотр промпта")
 async def get_prompt(
-    prompt_id: UUID = Path(
-        ..., title="ID промпта", description="ID просматриваемого промпта"
-    ),
+    prompt_id: UUID = Path(..., title="ID промпта", description="ID просматриваемого промпта"),
     context=Depends(require_permission_in_context("view_prompt")),
 ):
     logger.info(f"Запрос на просмотр промпта: {prompt_id}")
-    prompt = (
-        await Prompt.filter(id=prompt_id)
-        .first()
-        .values("id", "name", "text", "company_id", "created_at")
-    )
+    prompt = await Prompt.filter(id=prompt_id).first()
 
     if prompt is None:
         logger.warning(f"Промпт {prompt_id} не найден")
         raise HTTPException(status_code=404, detail="Промпт не найден")
-    check_company_access(prompt["company_id"], context)
+    check_company_access(prompt.company_id, context)
 
-    prompt_schema = PromptSchema(**prompt)
+    prompt_schema = PromptSchema.model_validate(prompt)
 
     logger.success(f"Промпт найден: {prompt_schema}")
     return prompt_schema

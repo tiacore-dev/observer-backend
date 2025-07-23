@@ -3,11 +3,10 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import Query
-from pydantic import Field
-from tiacore_lib.pydantic_models.clean_model import CleanableBaseModel
+from pydantic import BaseModel, Field
 
 
-class PromptCreateSchema(CleanableBaseModel):
+class PromptCreateSchema(BaseModel):
     name: str = Field(..., min_length=3, max_length=100, alias="prompt_name")
     text: str = Field(...)
     company_id: UUID = Field(...)
@@ -17,7 +16,7 @@ class PromptCreateSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class PromptEditSchema(CleanableBaseModel):
+class PromptEditSchema(BaseModel):
     name: Optional[str] = Field(None, min_length=3, max_length=100, alias="prompt_name")
     text: Optional[str] = None
 
@@ -26,7 +25,7 @@ class PromptEditSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class PromptSchema(CleanableBaseModel):
+class PromptSchema(BaseModel):
     id: UUID = Field(..., alias="prompt_id")
     name: str = Field(..., alias="prompt_name")
     text: str
@@ -38,11 +37,11 @@ class PromptSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class PromptResponseSchema(CleanableBaseModel):
+class PromptResponseSchema(BaseModel):
     prompt_id: UUID
 
 
-class PromptListResponseSchema(CleanableBaseModel):
+class PromptListResponseSchema(BaseModel):
     total: int
     prompts: List[PromptSchema]
 

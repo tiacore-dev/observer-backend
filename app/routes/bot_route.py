@@ -9,6 +9,7 @@ from app.handlers.telegram_api_url_handlers import (
     validate_token_and_register,
 )
 from app.pydantic_models.bot_schemas import (
+    BotEditSchema,
     BotListSchema,
     BotSchema,
     RegisterBotRequest,
@@ -31,10 +32,21 @@ async def add_bot(
     return {"bot_id": bot.id}
 
 
-@bot_router.delete("/{bot_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_bot(
-    bot_id: int, context=Depends(require_permission_in_context("delete_bot"))
+@bot_router.patch("/{bot_id}", summary="Изменение комментария к боту", status_code=status.HTTP_204_NO_CONTENT)
+async def edit_bot(
+    bot_id: int,
+    data: BotEditSchema = Body(...),
+    _=Depends(require_permission_in_context("edit_bot")),
 ):
+    bot = await Bot.filter(id=bot_id).first()
+    if not bot:
+        raise HTTPException(status_code=404, detail="Бот не найден")
+    bot.comment = data.comment
+    await bot.save()
+
+
+@bot_router.delete("/{bot_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_bot(bot_id: int, context=Depends(require_permission_in_context("delete_bot"))):
     bot = await Bot.filter(id=bot_id).first()
     if not bot:
         logger.warning(f"Бот {bot_id} не найден")
@@ -48,9 +60,7 @@ async def delete_bot(
     logger.success(f"Бот {bot_id} успешно удален")
 
 
-@bot_router.get(
-    "/all", response_model=BotListSchema, summary="Получение списка ботов с фильтрацией"
-)
+@bot_router.get("/all", response_model=BotListSchema, summary="Получение списка ботов с фильтрацией")
 async def get_bots(
     filters: dict = Depends(bot_filter_params),
     context=Depends(require_permission_in_context("get_all_bots")),
@@ -73,9 +83,7 @@ async def get_bots(
     if filters.get("bot_first_name"):
         query &= Q(bot_first_name__icontains=filters["bot_first_name"])
 
-    order_by = f"{'-' if filters.get('order') == 'desc' else ''}{
-        filters.get('sort_by', 'bot_username')
-    }"
+    order_by = f"{'-' if filters.get('order') == 'desc' else ''}{filters.get('sort_by', 'bot_username')}"
     page = filters.get("page", 1)
     page_size = filters.get("page_size", 10)
 

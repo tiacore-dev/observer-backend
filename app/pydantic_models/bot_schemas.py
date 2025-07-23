@@ -3,21 +3,24 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import Query
-from pydantic import Field
-from tiacore_lib.pydantic_models.clean_model import CleanableBaseModel
+from pydantic import BaseModel, Field
 
 
-class RegisterBotRequest(CleanableBaseModel):
+class BotEditSchema(BaseModel):
+    comment: str = Field(...)
+
+
+class RegisterBotRequest(BaseModel):
     token: str = Field(...)
     company_id: UUID = Field(...)
     comment: Optional[str] = Field(None)
 
 
-class BotResponseModel(CleanableBaseModel):
+class BotResponseModel(BaseModel):
     bot_id: int
 
 
-class BotSchema(CleanableBaseModel):
+class BotSchema(BaseModel):
     id: int = Field(..., alias="bot_id")
     bot_token: str
     bot_username: str
@@ -32,7 +35,7 @@ class BotSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class BotListSchema(CleanableBaseModel):
+class BotListSchema(BaseModel):
     total: int
     bots: List[BotSchema]
 

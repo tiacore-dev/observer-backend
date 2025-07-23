@@ -2,11 +2,18 @@ import datetime
 from typing import List, Optional
 
 from fastapi import Query
-from pydantic import Field
-from tiacore_lib.pydantic_models.clean_model import CleanableBaseModel
+from pydantic import BaseModel, Field
 
 
-class ChatSchema(CleanableBaseModel):
+class AccountEditSchema(BaseModel):
+    name: str = Field(..., alias="account_name")
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+
+class ChatSchema(BaseModel):
     id: int = Field(..., alias="chat_id")
     name: Optional[str] = Field(None, alias="chat_name")
     created_at: datetime.datetime
@@ -16,7 +23,7 @@ class ChatSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class ChatListSchema(CleanableBaseModel):
+class ChatListSchema(BaseModel):
     total: int
     chats: List[ChatSchema]
 
@@ -39,7 +46,7 @@ def chat_filter_params(
     }
 
 
-class AccountSchema(CleanableBaseModel):
+class AccountSchema(BaseModel):
     id: int = Field(..., alias="account_id")
     name: Optional[str] = Field(None, alias="account_name")
     username: Optional[str] = Field(None)
@@ -50,7 +57,7 @@ class AccountSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class AccountListSchema(CleanableBaseModel):
+class AccountListSchema(BaseModel):
     total: int
     accounts: List[AccountSchema]
 
