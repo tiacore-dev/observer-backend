@@ -157,6 +157,7 @@ class ScheduleShortSchema(BaseModel):
     created_at: datetime
     bot_id: int
     last_run_at: Optional[datetime] = None
+    send_strategy: Optional[SendStrategy] = None
 
     class Config:
         from_attributes = True
