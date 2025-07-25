@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class AccountEditSchema(BaseModel):
-    name: str = Field(..., alias="account_name")
+    username: str = Field(..., alias="account_name")
 
     class Config:
         from_attributes = True

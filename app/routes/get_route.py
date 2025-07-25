@@ -77,7 +77,7 @@ async def edit_accounts(
     account = await Account.filter(id=account_id).first()
     if not account:
         raise HTTPException(status_code=404, detail="Аккаунт не найден")
-    account.name = data.name
+    account.username = data.username
     await account.save()
 
 
