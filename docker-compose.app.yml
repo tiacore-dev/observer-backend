@@ -23,7 +23,7 @@ services:
     networks:
       observer_network:
         aliases:
-          - rabbitmq-observer-${CONFIG_NAME}
+          - redis-observer-${CONFIG_NAME}
 
   web:
     image: ${DOCKERHUB_USERNAME}/observer-backend:${TAG}

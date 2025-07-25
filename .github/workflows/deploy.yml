@@ -79,7 +79,9 @@ jobs:
           context: .
           push: true
           target: prod
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/observer-backend:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/observer-backend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/observer-backend:latest
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/observer-backend:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/observer-backend:buildcache,mode=max
           build-args: |
