@@ -11,6 +11,7 @@ from app.database.models import ScheduleStrategy, ScheduleType, SendStrategy
 
 class ScheduleCreateSchema(BaseModel):
     schedule_strategy: ScheduleStrategy
+    name: Optional[str] = Field(None, alias="schedule_name")
     chat_id: Optional[int] = Field(None)
     prompt_id: Optional[UUID] = Field(None)
     schedule_type: ScheduleType = Field(...)
@@ -26,6 +27,8 @@ class ScheduleCreateSchema(BaseModel):
     target_chats: List[int] = Field(...)
     bot_id: int = Field(...)
     enabled: Optional[bool] = True
+
+    description: Optional[str] = Field(None)
 
     send_strategy: Optional[SendStrategy] = Field(
         None,
@@ -78,6 +81,7 @@ class ScheduleCreateSchema(BaseModel):
 
 
 class ScheduleEditSchema(BaseModel):
+    name: Optional[str] = Field(None, alias="schedule_name")
     schedule_strategy: Optional[ScheduleStrategy] = Field(None)
     notification_text: Optional[str] = Field(None)
 
@@ -103,6 +107,8 @@ class ScheduleEditSchema(BaseModel):
 
     company_id: Optional[UUID] = Field(None)
 
+    description: Optional[str] = Field(None)
+
     @field_validator("cron_expression")
     @classmethod
     def validate_cron_expression(cls, value):
@@ -116,6 +122,7 @@ class ScheduleEditSchema(BaseModel):
 
 class ScheduleSchema(BaseModel):
     id: UUID = Field(..., alias="schedule_id")
+    name: Optional[str] = Field(None, alias="schedule_name")
     schedule_strategy: ScheduleStrategy
     notification_text: Optional[str] = None
     chat_id: Optional[int] = Field(None)
@@ -136,6 +143,8 @@ class ScheduleSchema(BaseModel):
     send_strategy: Optional[SendStrategy] = None
     time_to_send: Optional[time] = None
     send_after_minutes: Optional[int] = None
+
+    description: Optional[str] = Field(None)
 
     bot_id: int
 

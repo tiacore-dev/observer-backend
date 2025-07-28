@@ -126,7 +126,7 @@ class SendStrategy(str, Enum):
 
 class ChatSchedule(Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
-
+    name = fields.CharField(max_length=255, null=True)
     schedule_strategy = fields.CharEnumField(ScheduleStrategy)
 
     chat = fields.ForeignKeyField("models.Chat", related_name="schedules", null=True)
@@ -159,6 +159,8 @@ class ChatSchedule(Model):
     bot = fields.ForeignKeyField("models.Bot", related_name="schedules")
 
     message_intro = fields.CharField(max_length=255, null=True)
+
+    description = fields.TextField(null=True)
 
     target_chats: ReverseRelation["TargetChat"]
 
