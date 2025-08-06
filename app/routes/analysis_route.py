@@ -53,9 +53,7 @@ async def create_analysis(
             .all()
         )
         logger.debug(f"Найдено {len(messages)} сообщений.")
-        result_text, tokens_input, tokens_output = await yandex_analyze(
-            data.prompt_id, messages, settings
-        )
+        result_text, tokens_input, tokens_output = await yandex_analyze(data.prompt_id, messages, settings)
         analysis = await AnalysisResult.create(
             result_text=result_text,
             tokens_input=tokens_input,
@@ -99,45 +97,27 @@ async def get_analyses(
         query &= Q(chat_id=filters["chat_id"])
     if filters.get("schedule_id"):
         query &= Q(schedule_id=filters["schedule_id"])
+    if filters.get("prompt_id"):
+        query &= Q(prompt_id=filters["prompt_id"])
 
-    order_by = f"{'-' if filters.get('order') == 'desc' else ''}{
-        filters.get('sort_by', 'created_at')
-    }"
+    order_by = f"{'-' if filters.get('order') == 'desc' else ''}{filters.get('sort_by', 'created_at')}"
     page = filters.get("page", 1)
     page_size = filters.get("page_size", 10)
 
     total_count = await AnalysisResult.filter(query).count()
 
-    analyses = (
-        await AnalysisResult.filter(query)
-        .order_by(order_by)
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .values(
-            "id",
-            "prompt_id",
-            "chat_id",
-            "company_id",
-            "created_at",
-            "tokens_input",
-            "tokens_output",
-        )
-    )
+    analyses = await AnalysisResult.filter(query).order_by(order_by).offset((page - 1) * page_size).limit(page_size)
 
     logger.success(f"Найдено анализов: {len(analyses)} из {total_count}")
     return AnalysisListSchema(
         total=total_count,
-        analysis=[AnalysisShortSchema(**a) for a in analyses],
+        analysis=[AnalysisShortSchema.model_validate(analisis) for analisis in analyses],
     )
 
 
-@analysis_router.get(
-    "/{analysis_id}", response_model=AnalysisSchema, summary="Просмотр анализа"
-)
+@analysis_router.get("/{analysis_id}", response_model=AnalysisSchema, summary="Просмотр анализа")
 async def get_analysis(
-    analysis_id: UUID = Path(
-        ..., title="ID анализа", description="ID просматриваемого анализа"
-    ),
+    analysis_id: UUID = Path(..., title="ID анализа", description="ID просматриваемого анализа"),
     context=Depends(require_permission_in_context("view_analysis")),
 ):
     logger.info(f"Запрос на просмотр анализа: {analysis_id}")

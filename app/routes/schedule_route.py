@@ -184,11 +184,19 @@ async def get_schedules(
         .order_by(order_by)
         .offset((page - 1) * page_size)
         .limit(page_size)
-        .prefetch_related("chat", "prompt")
+        .prefetch_related("target_chats", "chat", "prompt")
     )
+    schedule_models = []
+    for schedule in schedules:
+        target_chat_ids = await TargetChat.filter(schedule=schedule).prefetch_related("chat").all()
+        target_chats = [target_chat.chat.id for target_chat in target_chat_ids]
+        schedule_dict = schedule.__dict__
+        schedule_dict["target_chats"] = target_chats
+        schedule_model = ScheduleShortSchema(**schedule_dict)
+        schedule_models.append(schedule_model)
     return ScheduleListSchema(
         total=total_count,
-        schedules=[ScheduleShortSchema.model_validate(schedule) for schedule in schedules],
+        schedules=schedule_models,
     )
 
 

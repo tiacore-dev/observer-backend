@@ -10,18 +10,22 @@ services:
       - "9090:9090"
     restart: always
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - prometheus-observer-${CONFIG_NAME}
 
   grafana:
     image: grafana/grafana
     container_name: grafana
     restart: always
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT}:3000"
     volumes:
       - grafana-storage:/var/lib/grafana
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - grafana-observer-${CONFIG_NAME}
 
   alertmanager:
     image: prom/alertmanager
@@ -33,7 +37,9 @@ services:
       - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
 
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - alertmanager-observer-${CONFIG_NAME}
 
 
   node-exporter:
@@ -51,7 +57,9 @@ services:
       - '--path.sysfs=/host/sys'
       - '--path.rootfs=/rootfs'
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - node-exporter-observer-${CONFIG_NAME}
 
 
   loki:
@@ -64,7 +72,9 @@ services:
       - ./monitoring/loki-config.yml:/etc/loki/config.yml
       - ./monitoring/loki-data:/loki
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - loki-observer-${CONFIG_NAME}
 
   promtail:
     image: grafana/promtail:2.9.3
@@ -75,17 +85,21 @@ services:
       - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - promtail-observer-${CONFIG_NAME}
 
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger
     restart: always
     ports:
-      - "16686:16686"  # UI
+      - "${JAEGER_UI_PORT}:16686"  # UI
       - "4318:4318" 
     networks:
-      - observer_network
+      observer_network:
+        aliases:
+          - jaeger-observer-${CONFIG_NAME}
 
 
 volumes:

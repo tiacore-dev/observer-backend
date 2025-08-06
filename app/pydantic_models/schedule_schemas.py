@@ -157,6 +157,7 @@ class ScheduleSchema(BaseModel):
 
 class ScheduleShortSchema(BaseModel):
     id: UUID = Field(..., alias="schedule_id")
+    name: Optional[str] = Field(None, alias="schedule_name")
     schedule_strategy: ScheduleStrategy
     prompt_id: Optional[UUID] = Field(None)
     schedule_type: ScheduleType
@@ -167,6 +168,8 @@ class ScheduleShortSchema(BaseModel):
     bot_id: int
     last_run_at: Optional[datetime] = None
     send_strategy: Optional[SendStrategy] = None
+    description: Optional[str] = Field(None)
+    target_chats: list[int]
 
     class Config:
         from_attributes = True
