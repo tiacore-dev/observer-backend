@@ -8,7 +8,7 @@ from loguru import logger
 from app.config import ConfigName, _load_settings
 
 load_dotenv()
-CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "Development"))
+CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "development"))
 settings = _load_settings(config_name=CONFIG_NAME)
 
 
@@ -41,9 +41,7 @@ class AsyncS3Manager:
 
         async with self._get_client() as s3:  # type: ignore[attr-defined]
             try:
-                await s3.put_object(
-                    Bucket=self.bucket_name, Key=key, Body=file_bytes, ACL="private"
-                )
+                await s3.put_object(Bucket=self.bucket_name, Key=key, Body=file_bytes, ACL="private")
                 logger.info(f"✅ Файл загружен: {key}")
                 return key
             except ClientError as e:
@@ -66,9 +64,7 @@ class AsyncS3Manager:
         prefix = f"{self.bucket_folder}/{chat_id}/"
         async with self._get_client() as s3:  # type: ignore[attr-defined]
             try:
-                response = await s3.list_objects_v2(
-                    Bucket=self.bucket_name, Prefix=prefix
-                )
+                response = await s3.list_objects_v2(Bucket=self.bucket_name, Prefix=prefix)
                 return [obj["Key"] for obj in response.get("Contents", [])]
             except ClientError as e:
                 logger.error(f"Ошибка при получении списка файлов: {e}")

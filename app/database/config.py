@@ -9,7 +9,7 @@ load_dotenv()
 
 # Порт и биндинг
 PORT = os.getenv("PORT", 8000)
-CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "Development"))
+CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "development"))
 settings = _load_settings(config_name=CONFIG_NAME)
 
 TORTOISE_ORM = {

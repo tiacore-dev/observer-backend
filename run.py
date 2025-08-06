@@ -11,7 +11,7 @@ load_dotenv()
 
 PORT = 8000
 
-CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "Development"))
+CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "development"))
 
 setup_logger()
 

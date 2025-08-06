@@ -13,7 +13,7 @@ from metrics.logger import setup_logger
 
 load_dotenv()
 setup_logger()
-CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "Development"))
+CONFIG_NAME = ConfigName(os.getenv("CONFIG_NAME", "development"))
 settings = _load_settings(CONFIG_NAME)
 
 
