@@ -72,7 +72,7 @@ async def get_chats(
 async def edit_accounts(
     account_id: int,
     data: AccountEditSchema = Body(...),
-    _=Depends(require_permission_in_context("edit_account")),
+    _=Depends(require_permission_in_context("edit_accounts")),
 ):
     account = await Account.filter(id=account_id).first()
     if not account:
