@@ -3,11 +3,10 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import Query
-from pydantic import Field
-from tiacore_lib.pydantic_models.clean_model import CleanableBaseModel
+from pydantic import BaseModel, Field
 
 
-class AnalysisCreateSchema(CleanableBaseModel):
+class AnalysisCreateSchema(BaseModel):
     prompt_id: UUID = Field(...)
     chat_id: int = Field(...)
     date_from: int = Field(...)
@@ -15,11 +14,11 @@ class AnalysisCreateSchema(CleanableBaseModel):
     company_id: UUID = Field(...)
 
 
-class AnalysisResponseSchema(CleanableBaseModel):
+class AnalysisResponseSchema(BaseModel):
     analysis_id: UUID
 
 
-class AnalysisSchema(CleanableBaseModel):
+class AnalysisSchema(BaseModel):
     id: UUID = Field(..., alias="analysis_id")
     prompt_id: UUID
     chat_id: int
@@ -38,7 +37,7 @@ class AnalysisSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class AnalysisShortSchema(CleanableBaseModel):
+class AnalysisShortSchema(BaseModel):
     id: UUID = Field(..., alias="analysis_id")
     prompt_id: UUID
     chat_id: int
@@ -52,7 +51,7 @@ class AnalysisShortSchema(CleanableBaseModel):
         populate_by_name = True
 
 
-class AnalysisListSchema(CleanableBaseModel):
+class AnalysisListSchema(BaseModel):
     total: int
     analysis: List[AnalysisShortSchema]
 

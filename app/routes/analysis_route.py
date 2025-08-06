@@ -122,31 +122,14 @@ async def get_analysis(
 ):
     logger.info(f"Запрос на просмотр анализа: {analysis_id}")
 
-    analysis = (
-        await AnalysisResult.filter(id=analysis_id)
-        .first()
-        .values(
-            "id",
-            "prompt_id",
-            "chat_id",
-            "result_text",
-            "schedule_id",
-            "company_id",
-            "created_at",
-            "date_to",
-            "date_from",
-            "tokens_input",
-            "tokens_output",
-            "send_time",
-        )
-    )
+    analysis = await AnalysisResult.filter(id=analysis_id).first()
 
     if analysis is None:
         logger.warning(f"Анализ {analysis_id} не найден")
         raise HTTPException(status_code=404, detail="Анализ не найден")
-    check_company_access(analysis["company_id"], context)
+    check_company_access(analysis.company_id, context)
 
-    analysis_schema = AnalysisSchema(**analysis)
+    analysis_schema = AnalysisSchema.model_validate(analysis)
 
     logger.success(f"Анализ найден: {analysis_schema.id}")
     return analysis_schema
