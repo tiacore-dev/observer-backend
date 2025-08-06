@@ -6,8 +6,6 @@ services:
     volumes:
        - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
        - ./monitoring:/etc/prometheus:ro
-    ports:
-      - "9090:9090"
     restart: always
     networks:
       observer_network:
@@ -46,8 +44,6 @@ services:
     image: prom/node-exporter:latest
     container_name: node-exporter-observer-${CONFIG_NAME}
     restart: unless-stopped
-    ports:
-      - "9100:9100"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -66,8 +62,6 @@ services:
     image: grafana/loki:2.9.3
     container_name: loki-observer-${CONFIG_NAME}
     restart: always
-    ports:
-      - "3100:3100"
     volumes:
       - ./monitoring/loki-config.yml:/etc/loki/config.yml
       - ./monitoring/loki-data:/loki
@@ -95,7 +89,6 @@ services:
     restart: always
     ports:
       - "${JAEGER_UI_PORT}:16686"  # UI
-      - "4318:4318" 
     networks:
       observer_network:
         aliases:
