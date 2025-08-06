@@ -98,7 +98,7 @@ async def yandex_analyze(prompt_id: UUID, messages: list[Message] | None, settin
     }
 
     payload = {
-        "modelUri": f"gpt://{settings.FOLDER_ID}/yandexgpt-pro",
+        "modelUri": f"gpt://{settings.FOLDER_ID}/yandexgpt",
         "completionOptions": {"stream": False, "temperature": 0.6, "maxTokens": 2000},
         "messages": [
             {"role": "system", "text": prompt.text},
