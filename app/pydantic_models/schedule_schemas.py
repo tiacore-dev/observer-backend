@@ -1,5 +1,5 @@
 from datetime import datetime, time
-from typing import List, Optional
+from typing import List, Literal, Optional
 from uuid import UUID
 
 from apscheduler.triggers.cron import CronTrigger
@@ -190,8 +190,10 @@ def schedule_filter_params(
     chat_id: Optional[UUID] = Query(None),
     schedule_type: Optional[ScheduleType] = Query(None),
     enabled: Optional[bool] = Query(None),
-    sort_by: Optional[str] = Query("schedule_type", description="Поле сортировки"),
-    order: Optional[str] = Query("asc", description="asc / desc"),
+    sort_by: Literal["schedule_type", "name", "schedule_strategy", "created_at", "last_run_at"] = Query(
+        "schedule_type", description="Поле сортировки"
+    ),
+    order: Literal["asc", "desc"] = Query("asc", description="asc / desc"),
     page: Optional[int] = Query(1, ge=1),
     page_size: Optional[int] = Query(10, ge=1, le=100),
 ):

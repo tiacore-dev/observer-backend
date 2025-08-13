@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from uuid import UUID
 
 from fastapi import Query
@@ -58,11 +58,11 @@ class AnalysisListSchema(BaseModel):
 
 def analysis_filter_params(
     company_id: Optional[UUID] = Query(None),
-    chat_id: Optional[UUID] = Query(None),
+    chat_id: Optional[int] = Query(None),
     schedule_id: Optional[UUID] = Query(None),
     prompt_id: Optional[UUID] = Query(None),
-    sort_by: Optional[str] = Query("created_at", description="Поле сортировки"),
-    order: Optional[str] = Query("desc", description="asc / desc"),
+    sort_by: Literal["created_at"] = Query("created_at", description="Поле сортировки"),
+    order: Literal["asc", "desc"] = Query("desc", description="asc / desc"),
     page: Optional[int] = Query(1, ge=1),
     page_size: Optional[int] = Query(10, ge=1, le=100),
 ):

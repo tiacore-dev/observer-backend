@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from fastapi import Query
 from pydantic import BaseModel, Field
@@ -32,7 +32,7 @@ def chat_filter_params(
     chat_name: Optional[str] = Query(None, description="Фильтр по названию бота"),
     bot_id: Optional[int] = Query(None, description="ID бота"),
     sort_by: Optional[str] = Query("name", description="Поле сортировки"),
-    order: Optional[str] = Query("asc", description="asc / desc"),
+    order: Literal["asc", "desc"] = Query("asc", description="asc / desc"),
     page: Optional[int] = Query(1, ge=1),
     page_size: Optional[int] = Query(10, ge=1, le=100),
 ):
@@ -50,6 +50,7 @@ class AccountSchema(BaseModel):
     id: int = Field(..., alias="account_id")
     name: Optional[str] = Field(None, alias="account_name")
     username: Optional[str] = Field(None)
+
     created_at: datetime.datetime
 
     class Config:
@@ -64,8 +65,8 @@ class AccountListSchema(BaseModel):
 
 def account_filter_params(
     username: Optional[str] = Query(None, description="Фильтр по названию чата"),
-    sort_by: Optional[str] = Query("username", description="Поле сортировки"),
-    order: Optional[str] = Query("asc", description="asc / desc"),
+    sort_by: Literal["name", "username"] = Query("username", description="Поле сортировки"),
+    order: Literal["asc", "desc"] = Query("asc", description="asc / desc"),
     page: Optional[int] = Query(1, ge=1),
     page_size: Optional[int] = Query(10, ge=1, le=100),
 ):

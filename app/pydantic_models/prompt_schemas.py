@@ -1,5 +1,5 @@
 import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from uuid import UUID
 
 from fastapi import Query
@@ -51,7 +51,7 @@ def prompt_filter_params(
     text: Optional[str] = Query(None, description="Фильтр по тексту"),
     company_id: Optional[UUID] = Query(None),
     sort_by: Optional[str] = Query("name", description="Поле сортировки"),
-    order: Optional[str] = Query("asc", description="asc / desc"),
+    order: Literal["asc", "desc"] = Query("asc", description="asc / desc"),
     page: Optional[int] = Query(1, ge=1),
     page_size: Optional[int] = Query(10, ge=1, le=100),
 ):
