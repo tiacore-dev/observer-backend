@@ -4,8 +4,9 @@ from loguru import logger
 from tiacore_lib.config import get_settings
 from tiacore_lib.handlers.dependency_handler import require_permission_in_context
 
-from app.database.models import Bot
+from app.database.models import Bot, ChatSchedule
 from app.exceptions.telegram import TelegramAPIError
+from app.handlers.rabbit_handler import publish_schedule_event
 from app.handlers.telegram_api_url_handlers import (
     delete_webhook,
     get_webhook_info,
@@ -39,7 +40,11 @@ async def set_bot_webhook(
 
 
 @webhook_router.delete("/{bot_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_bot_webhook(bot_id: int, context=Depends(require_permission_in_context("delete_webhook"))):
+async def delete_bot_webhook(
+    bot_id: int,
+    context=Depends(require_permission_in_context("delete_webhook")),
+    settings=Depends(get_settings),
+):
     bot = await Bot.get_or_none(id=bot_id)
     if not bot:
         raise HTTPException(status_code=404, detail="Бот не найден")
@@ -50,7 +55,13 @@ async def delete_bot_webhook(bot_id: int, context=Depends(require_permission_in_
         logger.error(f"Не удалось удалить webhook: {e}")
         raise HTTPException(status_code=502, detail="Ошибка Telegram API") from e
     bot.is_active = False
+
     await bot.save()
+    schedules = await ChatSchedule.filter(bot=bot).all()
+    for schedule in schedules:
+        schedule.enabled = False
+        await schedule.save()
+        await publish_schedule_event(schedule.id, settings=settings, action="delete")
 
 
 @webhook_router.get("/{bot_id}/info")
