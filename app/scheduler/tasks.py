@@ -5,87 +5,44 @@ from datetime import datetime, timezone
 from aiogram import Bot
 from loguru import logger
 
-from app.database.models import AnalysingModelTypes, AnalysisResult, Chat, ChatSchedule, Message, Prompt, TargetChat
+from app.database.models import AnalysingModelTypes, AnalysisResult, Chat, ChatSchedule, Message, TargetChat
 from app.yandex_funcs.yandex_funcs import yandex_analyze
 
 
 async def analyze(schedule: ChatSchedule, settings):
-    """
-    Анализирует сообщения в чате за указанный временной промежуток.
-    """
-    chat_id = schedule.chat.id  # type: ignore
-    logger.info(f"Начало анализа для чата {chat_id}")
-    chat = await Chat.get_or_none(id=chat_id)
-    if not chat:
-        logger.error(f"Чат {chat_id} не найден.")
-        raise ValueError(f"Чат {chat_id} не найден.")
+    if not (schedule.chat and schedule.prompt):
+        raise ValueError(f"Попытка провести анализ для неполного расписания: {schedule.id}")
+    chat_id = schedule.chat.id
+    chat = schedule.chat
 
-    now_utc = datetime.now(timezone.utc)
+    analysis_end = datetime.now(timezone.utc)
+    first_run = schedule.last_run_at is None
 
-    # Определяем начало анализа
-    if schedule.last_run_at:
-        analysis_start = schedule.last_run_at
+    # Первый запуск: от самого старого сообщения (если есть), иначе от created_at
+    if first_run:
+        analysis_start = schedule.created_at
+        lower_op = "gte"
     else:
-        first_message = await Message.filter(chat=chat).order_by("timestamp").first()
-        if not first_message:
-            logger.warning(f"Нет сообщений в чате {chat_id} для анализа")
-            return {
-                "chat": chat,
-                "analysis_result": None,
-                "tokens_input": 0,
-                "tokens_output": 0,
-                "prompt": schedule.prompt,
-                "schedule": schedule,
-                "company_id": schedule.company_id,
-            }
-        analysis_start = first_message.timestamp
+        analysis_start = schedule.last_run_at
+        lower_op = "gt"  # избегаем дублей на границе
 
-    analysis_end = now_utc
+    time_filter = {f"timestamp__{lower_op}": analysis_start, "timestamp__lte": analysis_end}
 
-    logger.info(f"Диапазон анализа: {analysis_start} - {analysis_end}")
+    messages = await (
+        Message.filter(chat_id=chat_id, **time_filter).select_related("account", "chat").order_by("timestamp")
+    )
 
-    try:
-        messages = (
-            await Message.filter(chat=chat, timestamp__gte=analysis_start, timestamp__lte=analysis_end)
-            .order_by("timestamp")
-            .prefetch_related("account", "chat")
-            .all()
-        )
-    except Exception as e:
-        logger.error(f"Ошибка при получении сообщений: {e}")
-        raise
+    prompt = schedule.prompt
 
-    if not messages:
-        logger.warning(
-            f"""Нет сообщений для анализа в чате {chat_id} за
-            период {analysis_start} - {analysis_end}."""
-        )
-        return {
-            "chat": chat,
-            "analysis_result": None,
-            "tokens_input": 0,
-            "tokens_output": 0,
-            "prompt": schedule.prompt,
-            "date_to": analysis_end,
-            "date_from": analysis_start,
-            "schedule": schedule,
-            "company_id": schedule.company_id,
-        }
+    analysis_result = None
+    tokens_input = tokens_output = 0
 
-    logger.info(f"Сообщений для анализа найдено: {len(messages)}")
-
-    try:
-        prompt = await Prompt.get_or_none(id=schedule.prompt.id)  # type: ignore
-        if not prompt:
-            raise ValueError(f"Промпт с ID {schedule.prompt.id} не найден.")  # type: ignore
-
+    if messages or schedule.run_on_empty_chat:
         analysis_result, tokens_input, tokens_output = await yandex_analyze(prompt.id, messages, settings)
 
-    except Exception as e:
-        logger.error(f"Ошибка при анализе сообщений: {e}")
-        raise
+    # Сдвигаем watermark даже при пустом окне (чтобы не гонять одно и то же)
+    await ChatSchedule.filter(id=schedule.id, last_run_at=schedule.last_run_at).update(last_run_at=analysis_end)
 
-    logger.info(f"Анализ завершён для чата {chat_id}.")
     return {
         "chat": chat,
         "analysis_result": analysis_result,

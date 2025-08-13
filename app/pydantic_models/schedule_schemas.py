@@ -28,6 +28,8 @@ class ScheduleCreateSchema(BaseModel):
     bot_id: int = Field(...)
     enabled: Optional[bool] = True
 
+    run_on_empty_chat: Optional[bool] = Field(None, description="Работать ли, если чат пуст")
+
     description: Optional[str] = Field(None)
 
     send_strategy: Optional[SendStrategy] = Field(
@@ -106,6 +108,7 @@ class ScheduleEditSchema(BaseModel):
     send_after_minutes: Optional[int] = Field(None)
 
     company_id: Optional[UUID] = Field(None)
+    run_on_empty_chat: Optional[bool] = Field(None)
 
     description: Optional[str] = Field(None)
 
@@ -148,6 +151,8 @@ class ScheduleSchema(BaseModel):
 
     bot_id: int
 
+    run_on_empty_chat: bool
+
     target_chats: list[int]
 
     class Config:
@@ -169,6 +174,7 @@ class ScheduleShortSchema(BaseModel):
     last_run_at: Optional[datetime] = None
     send_strategy: Optional[SendStrategy] = None
     description: Optional[str] = Field(None)
+    run_on_empty_chat: bool
     target_chats: list[int]
 
     class Config:

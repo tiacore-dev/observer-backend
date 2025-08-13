@@ -163,6 +163,7 @@ class ChatSchedule(Model):
     description = fields.TextField(null=True)
 
     target_chats: ReverseRelation["TargetChat"]
+    run_on_empty_chat = fields.BooleanField(default=False)
 
     @property
     def created_at_ts(self):
