@@ -236,3 +236,13 @@ class Prompt(Model):
 
     class Meta:
         table = "prompts"
+
+
+class UserAgreement(Model):
+    id = fields.UUIDField(pk=True, default=uuid.uuid4)
+    user_id = fields.UUIDField()
+    date = fields.DatetimeField(auto_now_add=True)
+    user_ip = fields.CharField(max_length=15)
+
+    class Meta:
+        table = "user_agreements"

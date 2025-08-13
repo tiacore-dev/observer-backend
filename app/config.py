@@ -16,7 +16,7 @@ class BaseConfig(SharedBaseConfig):
     BUCKET_NAME: Optional[str] = None
 
     WEBHOOK_BASE_URL: Optional[str] = None
-
+    CORS_ALLOW_ORIGINS: str = "*"
     YANDEX_SPEECHKIT_API_URL: Optional[str] = None
     YANDEX_GPT_API_URL: Optional[str] = None
     YANDEX_API_KEY: Optional[str] = None
@@ -41,6 +41,7 @@ class TestConfig(SharedTestConfig):
     AWS_ACCESS_KEY_ID: str = ""
     AWS_SECRET_ACCESS_KEY: str = ""
     BUCKET_NAME: str = ""
+    CORS_ALLOW_ORIGINS: str = "*"
     WEBHOOK_BASE_URL: str = ""
     YANDEX_SPEECHKIT_API_URL: str = ""
     YANDEX_GPT_API_URL: str = ""
