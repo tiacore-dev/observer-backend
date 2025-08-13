@@ -17,6 +17,7 @@ from app.database.models import (
 @pytest.fixture
 async def seed_schedule(seed_prompt: Prompt, seed_chat: Chat, seed_bot: Bot):
     schedule = await ChatSchedule.create(
+        name="New",
         schedule_strategy=ScheduleStrategy.ANALYSIS,
         prompt=seed_prompt,
         chat=seed_chat,

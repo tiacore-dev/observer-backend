@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from typing import List, Literal, Optional
 from uuid import UUID
 
@@ -6,6 +6,8 @@ from fastapi import Query
 from pydantic import BaseModel, Field
 
 from app.database.models import AnalysingModelTypes
+
+# Main schemas
 
 
 class AnalysisCreateSchema(BaseModel):
@@ -27,9 +29,9 @@ class AnalysisSchema(BaseModel):
     result_text: str
     schedule_id: Optional[UUID] = None
     company_id: UUID
-    created_at: datetime.datetime
-    date_to: datetime.datetime
-    date_from: datetime.datetime
+    created_at: datetime
+    date_to: datetime
+    date_from: datetime
     tokens_input: int
     tokens_output: int
     send_time: Optional[int]
@@ -45,7 +47,7 @@ class AnalysisShortSchema(BaseModel):
     prompt_id: UUID
     chat_id: int
     company_id: UUID
-    created_at: datetime.datetime
+    created_at: datetime
     tokens_input: int
     tokens_output: int
     analysing_model: Optional[AnalysingModelTypes] = None
@@ -82,3 +84,24 @@ def analysis_filter_params(
         "page": page,
         "page_size": page_size,
     }
+
+
+#  Report schemas
+class AnalysisReportFilters(BaseModel):
+    company_id: UUID
+    date_to: datetime
+    date_from: datetime
+
+
+class AnalysisReportSchema(BaseModel):
+    schedule_name: str
+    prompt_name: str
+    date: datetime
+    tokens_input: int
+    tokens_output: int
+
+
+class AnalysisReport(BaseModel):
+    analyses: List[AnalysisReportSchema]
+    total_tokens_input: int
+    total_tokens_output: int

@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 from loguru import logger
 from tiacore_lib.config import get_settings
+from tiacore_lib.handlers.auth_handler import require_superadmin
 from tiacore_lib.handlers.dependency_handler import require_permission_in_context
 from tiacore_lib.utils.validate_helpers import validate_exists
 from tortoise.expressions import Q
@@ -12,6 +13,9 @@ from app.database.models import AnalysingModelTypes, AnalysisResult, Chat, Messa
 from app.pydantic_models.analysis_schema import (
     AnalysisCreateSchema,
     AnalysisListSchema,
+    AnalysisReport,
+    AnalysisReportFilters,
+    AnalysisReportSchema,
     AnalysisResponseSchema,
     AnalysisSchema,
     AnalysisShortSchema,
@@ -70,6 +74,47 @@ async def create_analysis(
     except Exception as e:
         logger.exception("Ошибка при создании анализа")
         raise HTTPException(status_code=500, detail="Ошибка сервера") from e
+
+
+@analysis_router.get(
+    "/report",
+    response_model=AnalysisReport,
+    summary="Получение списка анализов с фильтрацией",
+)
+async def get_analyses_report(
+    filters: AnalysisReportFilters = Depends(),
+    _=Depends(require_superadmin),
+):
+    logger.info(f"Запрос отчета по компании: {filters}")
+
+    analyses = (
+        await AnalysisResult.filter(
+            company_id=filters.company_id, created_at__lte=filters.date_to, created_at__gte=filters.date_from
+        )
+        .order_by("-created_at")
+        .select_related("schedule", "prompt")
+        .all()
+    )
+
+    total_tokens_input = sum((analysis.tokens_input or 0) for analysis in analyses)
+    total_tokens_output = sum((analysis.tokens_output or 0) for analysis in analyses)
+    logger.success(f"Найдено анализов: {len(analyses)}")
+    return AnalysisReport(
+        analyses=[
+            AnalysisReportSchema(
+                schedule_name=analysis.schedule.name
+                if analysis.schedule and analysis.schedule.name
+                else "Создано вручную или расписание не имеет имени",
+                prompt_name=analysis.prompt.name,
+                date=analysis.created_at,
+                tokens_input=analysis.tokens_input,
+                tokens_output=analysis.tokens_output,
+            )
+            for analysis in analyses
+        ],
+        total_tokens_input=total_tokens_input or 0,
+        total_tokens_output=total_tokens_output or 0,
+    )
 
 
 @analysis_router.get(
