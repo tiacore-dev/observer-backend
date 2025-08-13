@@ -2,6 +2,7 @@ import secrets
 from uuid import UUID
 
 import aiohttp
+from fastapi import HTTPException
 from loguru import logger
 
 from app.config import BaseConfig, TestConfig
@@ -17,7 +18,9 @@ async def validate_token_and_register(token: str, company_id: UUID, comment: str
                 raise ValueError("Invalid token")
             bot_info = data["result"]
             logger.info(f"Информация о боте: {bot_info}")
-
+    bot_exists = await Bot.filter(id=bot_info["id"]).exists()
+    if bot_exists:
+        raise HTTPException(status_code=419, detail=f"Бот: {bot_info['username']} уже привязан к другой компании")
     secret_token = secrets.token_urlsafe(32)
     bot = await Bot.create(
         id=bot_info["id"],
