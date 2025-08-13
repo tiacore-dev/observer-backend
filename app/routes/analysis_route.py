@@ -8,7 +8,7 @@ from tiacore_lib.handlers.dependency_handler import require_permission_in_contex
 from tiacore_lib.utils.validate_helpers import validate_exists
 from tortoise.expressions import Q
 
-from app.database.models import AnalysisResult, Chat, Message, Prompt
+from app.database.models import AnalysingModelTypes, AnalysisResult, Chat, Message, Prompt
 from app.pydantic_models.analysis_schema import (
     AnalysisCreateSchema,
     AnalysisListSchema,
@@ -63,6 +63,7 @@ async def create_analysis(
             date_from=data.date_from,
             date_to=data.date_to,
             company_id=data.company_id,
+            analysing_model=AnalysingModelTypes.YA_GPT_PRO,
         )
         logger.success(f"Анализ успешно создан с id {analysis.id}")
         return AnalysisResponseSchema(analysis_id=analysis.id)
@@ -91,6 +92,8 @@ async def get_analyses(
             # Нет доступа ни к одной компании
             return AnalysisListSchema(total=0, analysis=[])
 
+    if filters.get("analysing_model"):
+        query &= Q(analysing_model=filters["analysing_model"])
     if filters.get("company_id"):
         query &= Q(company_id=filters["company_id"])
     if filters.get("chat_id"):

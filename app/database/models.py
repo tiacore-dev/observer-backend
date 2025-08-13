@@ -189,6 +189,11 @@ class TargetChat(Model):
         table = "target_chats"
 
 
+class AnalysingModelTypes(str, Enum):
+    YA_GPT_MINI = "yandex-gpt-mini"
+    YA_GPT_PRO = "yandex-gpt-pro"
+
+
 class AnalysisResult(Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
 
@@ -205,6 +210,8 @@ class AnalysisResult(Model):
 
     tokens_input = fields.IntField()
     tokens_output = fields.IntField()
+
+    analysing_model = fields.CharEnumField(AnalysingModelTypes, null=True)
 
     send_time = fields.BigIntField(null=True)
 

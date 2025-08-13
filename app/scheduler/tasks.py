@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from aiogram import Bot
 from loguru import logger
 
-from app.database.models import AnalysisResult, Chat, ChatSchedule, Message, Prompt, TargetChat
+from app.database.models import AnalysingModelTypes, AnalysisResult, Chat, ChatSchedule, Message, Prompt, TargetChat
 from app.yandex_funcs.yandex_funcs import yandex_analyze
 
 
@@ -116,6 +116,7 @@ async def save_analysis_result(data):
             date_to=data["date_to"],
             date_from=data["date_from"],
             company_id=data["company_id"],
+            analysing_model=AnalysingModelTypes.YA_GPT_PRO,
         )
         logger.debug(f"💾 Сохранили анализ: {analysis.id} — тип: {type(analysis.id)}")
 

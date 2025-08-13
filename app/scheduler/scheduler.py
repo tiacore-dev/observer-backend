@@ -6,9 +6,7 @@ from app.scheduler.init_scheduler import scheduler
 
 
 async def start_scheduler(settings):
-    schedules = await ChatSchedule.filter(enabled=True).prefetch_related(
-        "chat", "prompt", "bot"
-    )
+    schedules = await ChatSchedule.filter(enabled=True).prefetch_related("chat", "prompt", "bot")
     logger.debug(f"👟 Запускаем планировщик. Загружено {len(schedules)} задач")
     for schedule in schedules:
         add_schedule_job(schedule, settings)

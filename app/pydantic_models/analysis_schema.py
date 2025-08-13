@@ -5,6 +5,8 @@ from uuid import UUID
 from fastapi import Query
 from pydantic import BaseModel, Field
 
+from app.database.models import AnalysingModelTypes
+
 
 class AnalysisCreateSchema(BaseModel):
     prompt_id: UUID = Field(...)
@@ -31,6 +33,7 @@ class AnalysisSchema(BaseModel):
     tokens_input: int
     tokens_output: int
     send_time: Optional[int]
+    analysing_model: Optional[AnalysingModelTypes] = None
 
     class Config:
         from_attributes = True
@@ -45,6 +48,7 @@ class AnalysisShortSchema(BaseModel):
     created_at: datetime.datetime
     tokens_input: int
     tokens_output: int
+    analysing_model: Optional[AnalysingModelTypes] = None
 
     class Config:
         from_attributes = True
@@ -61,6 +65,7 @@ def analysis_filter_params(
     chat_id: Optional[int] = Query(None),
     schedule_id: Optional[UUID] = Query(None),
     prompt_id: Optional[UUID] = Query(None),
+    analysing_model: Optional[AnalysingModelTypes] = Query(None),
     sort_by: Literal["created_at"] = Query("created_at", description="Поле сортировки"),
     order: Literal["asc", "desc"] = Query("desc", description="asc / desc"),
     page: Optional[int] = Query(1, ge=1),
@@ -68,6 +73,7 @@ def analysis_filter_params(
 ):
     return {
         "company_id": company_id,
+        "analysing_model": analysing_model,
         "chat_id": chat_id,
         "schedule_id": schedule_id,
         "prompt_id": prompt_id,
