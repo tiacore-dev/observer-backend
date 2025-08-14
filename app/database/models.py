@@ -126,7 +126,7 @@ class SendStrategy(str, Enum):
 
 class ChatSchedule(Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
-    name = fields.CharField(max_length=255, null=True)
+    name = fields.CharField(max_length=255)
     schedule_strategy = fields.CharEnumField(ScheduleStrategy)
 
     chat = fields.ForeignKeyField("models.Chat", related_name="schedules", null=True)

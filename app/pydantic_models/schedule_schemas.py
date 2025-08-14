@@ -11,7 +11,7 @@ from app.database.models import ScheduleStrategy, ScheduleType, SendStrategy
 
 class ScheduleCreateSchema(BaseModel):
     schedule_strategy: ScheduleStrategy
-    name: Optional[str] = Field(None, alias="schedule_name")
+    name: str = Field(..., alias="schedule_name")
     chat_id: Optional[int] = Field(None)
     prompt_id: Optional[UUID] = Field(None)
     schedule_type: ScheduleType = Field(...)
@@ -162,7 +162,7 @@ class ScheduleSchema(BaseModel):
 
 class ScheduleShortSchema(BaseModel):
     id: UUID = Field(..., alias="schedule_id")
-    name: Optional[str] = Field(None, alias="schedule_name")
+    name: str = Field(..., alias="schedule_name")
     schedule_strategy: ScheduleStrategy
     prompt_id: Optional[UUID] = Field(None)
     schedule_type: ScheduleType
