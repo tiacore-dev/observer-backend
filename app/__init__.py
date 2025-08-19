@@ -42,11 +42,10 @@ def create_app(config_name: ConfigName) -> FastAPI:
             FastAPICache.init(RedisBackend(redis_client), prefix=f"observer:{config_name}:cache")
             try:
                 ok = await redis_client.ping()
-                setup_logger()  # уже есть у тебя; добавь лог ниже
 
-                logger.info("Redis connected: %s (%s)", ok, settings.REDIS_URL)
+                logger.info(f"Redis connected:  {ok}, {settings.REDIS_URL}")
             except Exception as e:
-                logger.error("Redis connect failed: %s (%s)", e, settings.REDIS_URL)
+                logger.error(f"Redis connect failed:  {e}, {settings.REDIS_URL}")
             app.state.redis = redis_client
 
             # --- старт consumer
