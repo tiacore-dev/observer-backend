@@ -58,9 +58,11 @@ async def delete_bot_webhook(
 
     await bot.save()
     schedules = await ChatSchedule.filter(bot=bot).all()
+    logger.debug(f"Найдено раписаний: {len(schedules)}")
     for schedule in schedules:
         schedule.enabled = False
         await schedule.save()
+        logger.debug(f"Остановка раписания: {schedule.id}")
         await publish_schedule_event(schedule.id, settings=settings, action="delete")
 
 
