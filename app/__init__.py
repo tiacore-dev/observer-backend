@@ -39,7 +39,14 @@ def create_app(config_name: ConfigName) -> FastAPI:
             Tortoise.init_models(["app.database.models"], "models")
             redis_url = settings.REDIS_URL
             redis_client = redis.from_url(redis_url)
-            FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
+            FastAPICache.init(RedisBackend(redis_client), prefix=f"observer:{config_name}:cache")
+            try:
+                ok = await redis_client.ping()
+                setup_logger()  # уже есть у тебя; добавь лог ниже
+
+                logger.info("Redis connected: %s (%s)", ok, settings.REDIS_URL)
+            except Exception as e:
+                logger.error("Redis connect failed: %s (%s)", e, settings.REDIS_URL)
             app.state.redis = redis_client
 
             # --- старт consumer
