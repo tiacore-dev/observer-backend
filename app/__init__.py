@@ -14,6 +14,7 @@ from tortoise import Tortoise
 
 from app.config import ProdConfig, ServerConfig, TestConfig, _load_settings
 from app.routes import register_routes
+from app.utils.helpers import delete_rabbit_queue
 from metrics.logger import setup_logger
 from metrics.tracer import init_tracer
 
@@ -27,6 +28,7 @@ def provide_settings(config_name: ConfigName):
 
 def create_app(config_name: ConfigName) -> FastAPI:
     settings = _load_settings(config_name)
+    logger = setup_logger()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -39,19 +41,25 @@ def create_app(config_name: ConfigName) -> FastAPI:
             redis_client = redis.from_url(redis_url)
             FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
             app.state.redis = redis_client
+
+            # --- старт consumer
+            queue_name = "observer-service"
             consumer = EventConsumer(
                 rabbit_url=settings.AUTH_BROKER_URL,
-                queue_name="observer-service",
+                queue_name=queue_name,
                 routing_keys=["user.*"],
             )
             app.state.rabbit_consumer = consumer
-            task = asyncio.create_task(consumer.connect_and_consume(partial(handle_user_event, settings=settings)))
-            app.state.rabbit_task = task
+            app.state.rabbit_task = asyncio.create_task(
+                consumer.connect_and_consume(partial(handle_user_event, settings=settings))
+            )
+            app.state.rabbit_queue_name = queue_name
+            app.state.rabbit_broker_url = settings.AUTH_BROKER_URL
 
         yield
-        # shutdown
+        # --- shutdown
         if not isinstance(settings, TestConfig):
-            # остановить consumer
+            # 1) остановить consumer-задачу
             task = getattr(app.state, "rabbit_task", None)
             if task:
                 task.cancel()
@@ -59,19 +67,35 @@ def create_app(config_name: ConfigName) -> FastAPI:
                     await task
                 except asyncio.CancelledError:
                     pass
+
+            # 2) попытаться удалить очередь отдельным подключением
+            try:
+                queue_name = getattr(app.state, "rabbit_queue_name", None)
+                broker_url = getattr(app.state, "rabbit_broker_url", None)
+                if queue_name and broker_url:
+                    await delete_rabbit_queue(broker_url, queue_name)
+            except Exception as e:
+                logger.warning("Queue delete unexpected error: %s", e)
+
+            # 3) закрыть consumer (соединения/каналы)
             consumer = getattr(app.state, "rabbit_consumer", None)
             if consumer and hasattr(consumer, "close"):
-                await consumer.close()
-            # закрыть Redis
+                try:
+                    await consumer.close()
+                except Exception as e:
+                    logger.warning("Consumer close error: %s", e)
+
+            # 4) закрыть Redis
             redis_client = getattr(app.state, "redis", None)
             if redis_client:
                 await redis_client.aclose()
 
+            # 5) закрыть БД
             await Tortoise.close_connections()
 
     app = FastAPI(title="Observer", redirect_slashes=False, lifespan=lifespan)
     app.dependency_overrides[get_settings] = provide_settings(config_name)
-    setup_logger()
+
     if isinstance(settings, (ServerConfig, ProdConfig)):
         origins_raw = settings.CORS_ALLOW_ORIGINS
         origins = [o.strip() for o in origins_raw.split(",") if o.strip()]

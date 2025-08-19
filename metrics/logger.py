@@ -102,3 +102,5 @@ def setup_logger():
     ):
         logging.getLogger(name).handlers = [InterceptHandler()]
         logging.getLogger(name).setLevel(logging.INFO)
+
+    return logger
