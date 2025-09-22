@@ -102,28 +102,28 @@ def create_app(config_name: ConfigName) -> FastAPI:
     app = FastAPI(title="Observer", redirect_slashes=False, lifespan=lifespan)
     app.dependency_overrides[get_settings] = provide_settings(config_name)
 
-    if isinstance(settings, (ServerConfig, ProdConfig)):
-        origins_raw = settings.CORS_ALLOW_ORIGINS
-        origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
-        if not origins or origins == ["*"]:
-            # чтобы не словить баг с credentials
-            raise RuntimeError("CORS_ALLOW_ORIGINS must be explicit in stage/prod")
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=origins,
-            allow_credentials=True,
-            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-            allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
-            max_age=600,
-        )
-    else:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=False,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
+    # if isinstance(settings, (ServerConfig, ProdConfig)):
+    #     origins_raw = settings.CORS_ALLOW_ORIGINS
+    #     origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
+    #     if not origins or origins == ["*"]:
+    #         # чтобы не словить баг с credentials
+    #         raise RuntimeError("CORS_ALLOW_ORIGINS must be explicit in stage/prod")
+    #     app.add_middleware(
+    #         CORSMiddleware,
+    #         allow_origins=origins,
+    #         allow_credentials=True,
+    #         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    #         allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+    #         max_age=600,
+    #     )
+    # else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     if config_name is ConfigName.PRODUCTION:
         init_tracer(app)
